@@ -46,6 +46,7 @@ private:
   Shared::Interval * intervalAtColumn(int columnIndex) override;
 
   // Function evaluation memoization
+  static constexpr int k_valuesCellBufferSize = 2*Poincare::PrintFloat::charSizeForFloatsWithPrecision(Poincare::Preferences::LargeNumberOfSignificantDigits)+3; // The largest buffer holds (-1.234567E-123;-1.234567E-123)
   char * memoizedBufferAtIndex(int i) override {
     assert(i >= 0 && i < k_maxNumberOfCells);
     return m_memoizedBuffer[i];
