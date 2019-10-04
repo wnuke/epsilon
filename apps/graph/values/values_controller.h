@@ -17,53 +17,91 @@ namespace Graph {
 class ValuesController : public Shared::ValuesController, public SelectableTableViewDelegate {
 public:
   ValuesController(Responder * parentResponder, InputEventHandlerDelegate * inputEventHandlerDelegate, ButtonRowController * header);
-  Button * buttonAtIndex(int index, ButtonRowController::Position position) const override {
-    return const_cast<Button *>(&m_setIntervalButton);
-  }
+
+  // TableViewDataSource
   KDCoordinate columnWidth(int i) override;
   KDCoordinate cumulatedWidthFromIndex(int i) override;
   int indexFromCumulatedWidth(KDCoordinate offsetX) override;
   void willDisplayCellAtLocation(HighlightCell * cell, int i, int j) override;
   int typeAtLocation(int i, int j) override;
+
+  // SelectableTableViewDelegate
+  void tableViewDidChangeSelection(SelectableTableView * t, int previousSelectedCellX, int previousSelectedCellY, bool withinTemporarySelection = false) override;
+
+  // ButtonRowDelegate
+  Button * buttonAtIndex(int index, ButtonRowController::Position position) const override {
+    return const_cast<Button *>(&m_setIntervalButton);
+  }
+
+  // AlternateEmptyViewDelegate
   I18n::Message emptyMessage() override;
+
+  // Parameters controllers getters
   Shared::IntervalParameterController * intervalParameterController() override {
     return &m_intervalParameterController;
   }
   IntervalParameterSelectorController * intervalParameterSelectorController() {
     return &m_intervalParameterSelectorController;
   }
-  void tableViewDidChangeSelection(SelectableTableView * t, int previousSelectedCellX, int previousSelectedCellY, bool withinTemporarySelection = false) override;
 private:
   static constexpr KDCoordinate k_abscissaCellWidth = k_cellWidth + Metric::TableSeparatorThickness;
   static constexpr KDCoordinate k_parametricCellWidth = (2*Poincare::PrintFloat::glyphLengthForFloatWithPrecision(Poincare::Preferences::LargeNumberOfSignificantDigits)+3) * 7 + 2*Metric::CellMargin; // The largest cell is holding "(-1.234567E-123;-1.234567E-123)" and KDFont::SmallFont->glyphSize().width() = 7
+  static constexpr int k_maxNumberOfFunctions = 4;
+  static constexpr int k_maxNumberOfAbscissaCells = Shared::ContinuousFunction::k_numberOfPlotTypes * k_maxNumberOfRows;
+  static constexpr int k_maxNumberOfCells = k_maxNumberOfFunctions * k_maxNumberOfRows;
 
-  constexpr static int k_maxNumberOfFunctions = 5;
-  constexpr static int k_maxNumberOfAbscissaCells = Shared::ContinuousFunction::k_numberOfPlotTypes * k_maxNumberOfRows;
-  constexpr static int k_maxNumberOfCells = k_maxNumberOfFunctions * k_maxNumberOfRows;
-
+  // Values controller
   void setStartEndMessages(Shared::IntervalParameterController * controller, int column) override;
+  int maxNumberOfCells() override { return k_maxNumberOfCells; }
+  int maxNumberOfFunctions() override { return k_maxNumberOfFunctions; }
+
+  // Number of columns memoization
   void updateNumberOfColumns() const override;
+
+  // Model getters
   Ion::Storage::Record recordAtColumn(int i) override;
   Ion::Storage::Record recordAtColumn(int i, bool * isDerivative);
-  int numberOfColumnsForRecord(Ion::Storage::Record record) const;
+  ContinuousFunctionStore * functionStore() const override { return static_cast<ContinuousFunctionStore *>(Shared::ValuesController::functionStore()); }
   Shared::Interval * intervalAtColumn(int columnIndex) override;
+
+  // Number of columns
+  int numberOfColumnsForRecord(Ion::Storage::Record record) const;
+  int numberOfColumnsForPlotType(int plotTypeIndex) const;
+  int numberOfAbscissaColumnsBeforeColumn(int column);
+  int numberOfValuesColumns() override;
+  Shared::ContinuousFunction::PlotType plotTypeAtColumn(int * i) const;
+
+  // Function evaluation memoization
+  static constexpr int k_valuesCellBufferSize = 2*Poincare::PrintFloat::charSizeForFloatsWithPrecision(Poincare::Preferences::LargeNumberOfSignificantDigits)+3; // The largest buffer holds (-1.234567E-123;-1.234567E-123)
+  char * memoizedBufferAtIndex(int i) override {
+    assert(i >= 0 && i < k_maxNumberOfCells);
+    return m_memoizedBuffer[i];
+  }
+  int valuesCellBufferSize() const override { return k_valuesCellBufferSize; }
+  int numberOfMemoizedColumn() override { return k_maxNumberOfFunctions; }
+  /* The conversion of column coordinates from the absolute table to the table
+   * on only values cell depends on the number of abscissa columns which depends
+   * on the number of different plot types in the table. */
+  int valuesColumnForAbsoluteColumn(int column) override;
+  int absoluteColumnForValuesColumn(int column) override;
+  void fillMemoizedBuffer(int i, int j, int index) override;
+
+  // Parameter controllers
+  ViewController * functionParameterController() override;
   I18n::Message valuesParameterMessageAtColumn(int columnIndex) const override;
   /* The paramater i should be the column index and plotTypeAtColumn changes it
    * to be the relative column index within the sub table. */
-  Shared::ContinuousFunction::PlotType plotTypeAtColumn(int * i) const;
-  int maxNumberOfCells() override;
-  int maxNumberOfFunctions() override;
+
+  // Cells & View
   Shared::Hideable * hideableCellFromType(HighlightCell * cell, int type);
-  void printEvaluationOfAbscissaAtColumn(double abscissa, int columnIndex, char * buffer, const int bufferSize) override;
-  ContinuousFunctionStore * functionStore() const override { return static_cast<ContinuousFunctionStore *>(Shared::ValuesController::functionStore()); }
   Shared::BufferFunctionTitleCell * functionTitleCells(int j) override;
   EvenOddBufferTextCell * floatCells(int j) override;
   int abscissaCellsCount() const override { return k_maxNumberOfAbscissaCells; }
   EvenOddEditableTextCell * abscissaCells(int j) override { assert (j >= 0 && j < k_maxNumberOfAbscissaCells); return &m_abscissaCells[j]; }
   int abscissaTitleCellsCount() const override { return Shared::ContinuousFunction::k_numberOfPlotTypes; }
   EvenOddMessageTextCell * abscissaTitleCells(int j) override { assert (j >= 0 && j < abscissaTitleCellsCount()); return &m_abscissaTitleCells[j]; }
-  ViewController * functionParameterController() override;
   SelectableTableView * selectableTableView() override { return &m_selectableTableView; }
+
 
   /* For parametric function, we display the evaluation with the form "(1;2)".
    * This form is not parsable so when we store it into the clipboard, we want
@@ -77,7 +115,7 @@ private:
   };
 
   ValuesSelectableTableView m_selectableTableView;
-  mutable int m_numberOfColumnsForType[Shared::ContinuousFunction::k_numberOfPlotTypes];
+  mutable int m_numberOfValuesColumnsForType[Shared::ContinuousFunction::k_numberOfPlotTypes];
   Shared::BufferFunctionTitleCell m_functionTitleCells[k_maxNumberOfFunctions];
   Shared::HideableEvenOddBufferTextCell m_floatCells[k_maxNumberOfCells];
   AbscissaTitleCell m_abscissaTitleCells[Shared::ContinuousFunction::k_numberOfPlotTypes];
@@ -87,6 +125,8 @@ private:
   IntervalParameterSelectorController m_intervalParameterSelectorController;
   DerivativeParameterController m_derivativeParameterController;
   Button m_setIntervalButton;
+  // TODO specialize buffer size as well
+  mutable char m_memoizedBuffer[k_maxNumberOfCells][k_valuesCellBufferSize];
 };
 
 }

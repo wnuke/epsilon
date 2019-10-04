@@ -34,6 +34,8 @@ ValuesController::ValuesController(Responder * parentResponder, InputEventHandle
   setupSelectableTableViewAndCells(inputEventHandlerDelegate);
 }
 
+// TableViewDataSource
+
 KDCoordinate ValuesController::columnWidth(int i) {
   return k_cellWidth;
 }
@@ -53,6 +55,7 @@ void ValuesController::willDisplayCellAtLocation(HighlightCell * cell, int i, in
   }
 }
 
+// AlternateEmptyViewDelegate
 I18n::Message ValuesController::emptyMessage() {
   if (functionStore()->numberOfDefinedModels() == 0) {
     return I18n::Message::NoSequence;
@@ -60,9 +63,16 @@ I18n::Message ValuesController::emptyMessage() {
   return I18n::Message::NoActivatedSequence;
 }
 
+// ValuesController
 void ValuesController::setStartEndMessages(Shared::IntervalParameterController * controller, int column) {
   m_intervalParameterController.setStartEndMessages(I18n::Message::NStart, I18n::Message::NEnd);
 }
+
+I18n::Message ValuesController::valuesParameterMessageAtColumn(int columnIndex) const {
+  return I18n::Message::NColumn;
+}
+
+// EditableCellViewController
 
 bool ValuesController::setDataAtLocation(double floatBody, int columnIndex, int rowIndex) {
   if (floatBody < 0) {
@@ -71,19 +81,23 @@ bool ValuesController::setDataAtLocation(double floatBody, int columnIndex, int 
   return Shared::ValuesController::setDataAtLocation(std::round(floatBody), columnIndex, rowIndex);
 }
 
-void ValuesController::printEvaluationOfAbscissaAtColumn(double abscissa, int columnIndex, char * buffer, const int bufferSize) {
-  Shared::ExpiringPointer<Sequence> sequence = functionStore()->modelForRecord(recordAtColumn(columnIndex));
-  Coordinate2D<double> xy = sequence->evaluateXYAtParameter(abscissa, textFieldDelegateApp()->localContext());
-  Shared::PoincareHelpers::ConvertFloatToText<double>(xy.x2(), buffer, bufferSize, Preferences::LargeNumberOfSignificantDigits);
-}
+// Model getters
 
 Shared::Interval * ValuesController::intervalAtColumn(int columnIndex) {
   return App::app()->interval();
 }
 
-I18n::Message ValuesController::valuesParameterMessageAtColumn(int columnIndex) const {
-  return I18n::Message::NColumn;
+// Function evaluation memoization
+
+void ValuesController::fillMemoizedBuffer(int column, int row, int index) {
+  char * buffer = memoizedBufferAtIndex(index);
+  double abscissa = intervalAtColumn(column)->element(row-1);
+  Shared::ExpiringPointer<Sequence> sequence = functionStore()->modelForRecord(recordAtColumn(column));
+  Coordinate2D<double> xy = sequence->evaluateXYAtParameter(abscissa, textFieldDelegateApp()->localContext());
+  Shared::PoincareHelpers::ConvertFloatToText<double>(xy.x2(), buffer, k_valuesCellBufferSize, Preferences::LargeNumberOfSignificantDigits);
 }
+
+// Parameters controllers getter
 
 ViewController * ValuesController::functionParameterController() {
 #if COPY_COLUMN
