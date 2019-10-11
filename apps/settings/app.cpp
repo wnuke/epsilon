@@ -17,7 +17,7 @@ const Image * App::Descriptor::icon() {
 }
 
 App * App::Snapshot::unpack(Container * container) {
-  return new (container->currentAppBuffer()) App(this);
+  return new App(this);
 }
 
 App::Descriptor * App::Snapshot::descriptor() {
