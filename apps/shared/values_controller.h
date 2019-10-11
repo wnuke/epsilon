@@ -43,13 +43,13 @@ public:
   virtual IntervalParameterController * intervalParameterController() = 0;
 
 protected:
-  // The cellWidth is increased by 10 pixels to avoid displaying 4 columns on the screen (and thus decrease the number of memoized cell)
+  // The cellWidth is increased by 10 pixels to avoid displaying more than 4 columns on the screen (and thus decrease the number of memoized cell)
   static constexpr KDCoordinate k_cellWidth = (Poincare::PrintFloat::glyphLengthForFloatWithPrecision(Poincare::Preferences::LargeNumberOfSignificantDigits)) * 7 + 2*Metric::CellMargin+10; // KDFont::SmallFont->glyphSize().width() = 7, we add 10 to avoid displaying more that 4 columns and decr
   static constexpr int k_abscissaTitleCellType = 0;
   static constexpr int k_functionTitleCellType = 1;
   static constexpr int k_editableValueCellType = 2;
   static constexpr int k_notEditableValueCellType = 3;
-  static constexpr int k_maxNumberOfRows = 10;
+  static constexpr int k_maxNumberOfDisplayableRows = 10;
   static constexpr const KDFont * k_font = KDFont::SmallFont;
 
   // EditableCellTableViewController
@@ -92,7 +92,7 @@ private:
   // EditableCellTableViewController
   bool cellAtLocationIsEditable(int columnIndex, int rowIndex) override;
   double dataAtLocation(int columnIndex, int rowIndex) override;
-  void didChangeRow(int row) override;
+  void didChangeCell(int column, int row) override;
   virtual int numberOfValuesColumns() { return functionStore()->numberOfActiveFunctions(); }
   int maxNumberOfElements() const override {
     return Interval::k_maxNumberOfElements;
@@ -107,14 +107,13 @@ private:
   int absoluteRowForValuesRow(int row) { return row + 1; } // Add the title row
   // Coordinates of memoizedBufferForCell refer to the absolute table
   char * memoizedBufferForCell(int i, int j);
-  virtual int valuesCellBufferSize() const { return Poincare::PrintFloat::charSizeForFloatsWithPrecision(Poincare::Preferences::LargeNumberOfSignificantDigits); }
-  // Coordinates of moveMemoizedBuffer refer to the memoized table
-  void moveMemoizedBuffer(int destinationI, int destinationJ, int sourceI, int sourceJ);
+  virtual int valuesCellBufferSize() const = 0;
   // Coordinates of fillMemoizedBuffer refer to the absolute table but the index
   // refers to the memoized table
   virtual void fillMemoizedBuffer(int i, int j, int index) = 0;
   /* m_firstMemoizedColumn and m_firstMemoizedRow are coordinates of the table
    * of values cells.*/
+  virtual int numberOfColumnsForAbscissaColumn(int column) { assert(column == 0); return numberOfColumns(); }
   mutable int m_firstMemoizedColumn;
   mutable int m_firstMemoizedRow;
 

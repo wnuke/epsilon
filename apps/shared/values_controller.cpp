@@ -9,6 +9,7 @@ using namespace Poincare;
 namespace Shared {
 
 static inline int minInt(int x, int y) { return x < y ? x : y; }
+static inline int absInt(int x) { return x < 0 ? -x : x; }
 
 // Constructor and helpers
 
@@ -49,9 +50,10 @@ const char * ValuesController::title() {
 }
 
 void ValuesController::viewWillAppear() {
+  // Reset memoization before any call to willDisplayCellAtLocation
+  resetMemoization();
   EditableCellTableViewController::viewWillAppear();
   header()->setSelectedButton(-1);
-  resetMemoization();
 }
 
 void ValuesController::viewDidDisappear() {
@@ -84,7 +86,13 @@ bool ValuesController::handleEvent(Ion::Events::Event event) {
   }
   if (event == Ion::Events::Backspace && selectedRow() > 0 &&
       selectedRow() <= numberOfElementsInColumn(selectedColumn())) {
-    intervalAtColumn(selectedColumn())->deleteElementAtIndex(selectedRow()-1);
+    int row = selectedRow();
+    int column = selectedColumn();
+    intervalAtColumn(column)->deleteElementAtIndex(row-1);
+    // Reload memoization
+    for (int i = row; i < numberOfElementsInColumn(column)+1; i++) {
+      didChangeCell(column, i);
+    }
     selectableTableView()->reloadData();
     return true;
   }
@@ -224,20 +232,23 @@ double ValuesController::dataAtLocation(int columnIndex, int rowIndex) {
   return intervalAtColumn(columnIndex)->element(rowIndex-1);
 }
 
-void ValuesController::didChangeRow(int row) {
+void ValuesController::didChangeCell(int column, int row) {
   /* Update the row memoization if it exists */
+  // the first row is never reloaded as it corresponds to title row
+  assert(row > 0);
   // Conversion of coordinates from absolute table to values table
   int valuesRow = valuesRowForAbsoluteRow(row);
-  if (m_firstMemoizedRow > valuesRow || valuesRow >= m_firstMemoizedRow + k_maxNumberOfRows) {
+  if (m_firstMemoizedRow > valuesRow || valuesRow >= m_firstMemoizedRow + k_maxNumberOfDisplayableRows) {
     // The changed row is out of the memoized table
     return;
   }
 
+  // Update the memoization of rows linked to the changed cell
   int memoizedRow = valuesRow - m_firstMemoizedRow;
-  int maxI = numberOfValuesColumns() - m_firstMemoizedColumn;
   int nbOfMemoizedColumns = numberOfMemoizedColumn();
-  for (int i = 0; i < minInt(nbOfMemoizedColumns, maxI); i++) {
-    fillMemoizedBuffer(absoluteColumnForValuesColumn(m_firstMemoizedColumn + i), row, nbOfMemoizedColumns*memoizedRow+i);
+  for (int i = column+1; i < column+numberOfColumnsForAbscissaColumn(column); i++) {
+    int memoizedI = valuesColumnForAbsoluteColumn(i) - m_firstMemoizedColumn;
+    fillMemoizedBuffer(i, row, nbOfMemoizedColumns*memoizedRow+memoizedI);
   }
 }
 
@@ -279,11 +290,6 @@ void ValuesController::resetMemoization() {
   m_firstMemoizedRow = INT_MAX;
 }
 
-void ValuesController::moveMemoizedBuffer(int destinationI, int destinationJ, int sourceI, int sourceJ) {
-  int nbOfMemoizedColumns = numberOfMemoizedColumn();
-  strlcpy(memoizedBufferAtIndex(destinationJ*nbOfMemoizedColumns + destinationI), memoizedBufferAtIndex(sourceJ*nbOfMemoizedColumns + sourceI), valuesCellBufferSize());
-}
-
 char * ValuesController::memoizedBufferForCell(int i, int j) {
   // Conversion of coordinates from absolute table to values table
   int valuesI = valuesColumnForAbsoluteColumn(i);
@@ -300,28 +306,30 @@ char * ValuesController::memoizedBufferForCell(int i, int j) {
   }
   if (valuesJ < m_firstMemoizedRow) {
     offsetJ = valuesJ - m_firstMemoizedRow;
-  } else if (valuesJ >= m_firstMemoizedRow + k_maxNumberOfRows) {
-    offsetJ = valuesJ - k_maxNumberOfRows - m_firstMemoizedRow + 1;
+  } else if (valuesJ >= m_firstMemoizedRow + k_maxNumberOfDisplayableRows) {
+    offsetJ = valuesJ - k_maxNumberOfDisplayableRows - m_firstMemoizedRow + 1;
   }
+  int offset = -offsetJ*nbOfMemoizedColumns-offsetI;
 
   // Apply the offset
-  if (offsetI != 0 || offsetJ != 0) {
+  if (offset != 0) {
     m_firstMemoizedColumn = m_firstMemoizedColumn + offsetI;
     m_firstMemoizedRow = m_firstMemoizedRow + offsetJ;
-    // Translate already memoized cells
-    int maxI = numberOfValuesColumns() - m_firstMemoizedColumn;
-    for (int ii = offsetI > 0 ? 0 : minInt(nbOfMemoizedColumns, maxI)-1;  offsetI > 0 ? ii < minInt(-offsetI + nbOfMemoizedColumns, maxI) : ii >= -offsetI; ii += offsetI > 0 ? 1 : -1) {
-      int maxJ = numberOfElementsInColumn(absoluteColumnForValuesColumn(ii+m_firstMemoizedColumn)) - m_firstMemoizedRow;
-      for (int jj = offsetJ > 0 ? 0 : minInt(k_maxNumberOfRows, maxJ)-1; offsetJ > 0 ? jj < minInt(-offsetJ+k_maxNumberOfRows, maxJ) : jj >= -offsetJ; jj += offsetJ > 0 ? 1 : -1) {
-        moveMemoizedBuffer(ii, jj, ii+offsetI, jj+offsetJ);
-      }
+    // Shift already memoized cells
+    int numberOfMemoizedCell = k_maxNumberOfDisplayableRows*numberOfMemoizedColumn();
+    size_t moveLength = (numberOfMemoizedCell - absInt(offset))*valuesCellBufferSize()*sizeof(char);
+    if (offset > 0 && offset < numberOfMemoizedCell) {
+      memmove(memoizedBufferAtIndex(offset), memoizedBufferAtIndex(0), moveLength);
+    } else if (offset < 0 && offset > -numberOfMemoizedCell) {
+      memmove(memoizedBufferAtIndex(0), memoizedBufferAtIndex(-offset), moveLength);
     }
     // Compute the buffer of the new cells of the memoized table
+    int maxI = numberOfValuesColumns() - m_firstMemoizedColumn;
     for (int ii = 0; ii < minInt(nbOfMemoizedColumns, maxI); ii++) {
       int maxJ = numberOfElementsInColumn(absoluteColumnForValuesColumn(ii+m_firstMemoizedColumn)) - m_firstMemoizedRow;
-      for (int jj = 0; jj < minInt(k_maxNumberOfRows, maxJ); jj++) {
+      for (int jj = 0; jj < minInt(k_maxNumberOfDisplayableRows, maxJ); jj++) {
         // Escape if already filled
-        if (ii >= -offsetI && ii < -offsetI + nbOfMemoizedColumns && jj >= -offsetJ && jj < -offsetJ + k_maxNumberOfRows) {
+        if (ii >= -offsetI && ii < -offsetI + nbOfMemoizedColumns && jj >= -offsetJ && jj < -offsetJ + k_maxNumberOfDisplayableRows) {
           continue;
         }
         fillMemoizedBuffer(absoluteColumnForValuesColumn(m_firstMemoizedColumn + ii),

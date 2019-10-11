@@ -37,7 +37,7 @@ ValuesController::ValuesController(Responder * parentResponder, InputEventHandle
     return true;
   }, this), k_font)
 {
-  for (int i = 0; i < k_maxNumberOfFunctions; i++) {
+  for (int i = 0; i < k_maxNumberOfDisplayableFunctions; i++) {
     m_functionTitleCells[i].setOrientation(FunctionTitleCell::Orientation::HorizontalIndicator);
     m_functionTitleCells[i].setFont(KDFont::SmallFont);
   }
@@ -207,6 +207,10 @@ Shared::Interval * ValuesController::intervalAtColumn(int columnIndex) {
 
 // Number of columns
 
+int ValuesController::numberOfColumnsForAbscissaColumn(int column) {
+  return numberOfColumnsForPlotType((int)plotTypeAtColumn(&column));
+}
+
 int ValuesController::numberOfColumnsForRecord(Ion::Storage::Record record) const {
   ExpiringPointer<ContinuousFunction> f = functionStore()->modelForRecord(record);
   ContinuousFunction::PlotType plotType = f->plotType();
@@ -259,7 +263,7 @@ int ValuesController::absoluteColumnForValuesColumn(int column) {
 }
 
 void ValuesController::fillMemoizedBuffer(int column, int row, int index) {
-  double abscissa = intervalAtColumn(column)->element(row-1);
+  double abscissa = intervalAtColumn(column)->element(row-1); // Subtract the title row from row to get the element index
   bool isDerivative = false;
   double evaluationX = NAN;
   double evaluationY = NAN;
@@ -326,12 +330,12 @@ Shared::Hideable * ValuesController::hideableCellFromType(HighlightCell * cell, 
 }
 
 Shared::BufferFunctionTitleCell * ValuesController::functionTitleCells(int j) {
-  assert(j >= 0 && j < k_maxNumberOfFunctions);
+  assert(j >= 0 && j < k_maxNumberOfDisplayableFunctions);
   return &m_functionTitleCells[j];
 }
 
 EvenOddBufferTextCell * ValuesController::floatCells(int j) {
-  assert(j >= 0 && j < k_maxNumberOfCells);
+  assert(j >= 0 && j < k_maxNumberOfDisplayableCells);
   return &m_floatCells[j];
 }
 
