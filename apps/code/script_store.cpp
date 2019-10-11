@@ -21,6 +21,7 @@ ScriptStore::ScriptStore()
   addScriptFromTemplate(ScriptTemplate::Squares());
   addScriptFromTemplate(ScriptTemplate::Mandelbrot());
   addScriptFromTemplate(ScriptTemplate::Polynomial());
+  addScriptFromTemplate(ScriptTemplate::Pong());
 }
 
 void ScriptStore::deleteAllScripts() {
