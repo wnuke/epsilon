@@ -19,7 +19,7 @@ const Image * App::Descriptor::icon() {
 
 void App::Snapshot::pack(App * app) {
   tidy();
-  app->~App();
+  delete app;
   assert(Poincare::TreePool::sharedPool()->numberOfNodes() == 0);
 }
 

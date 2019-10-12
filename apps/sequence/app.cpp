@@ -26,7 +26,7 @@ App::Snapshot::Snapshot() :
 }
 
 App * App::Snapshot::unpack(Container * container) {
-  return new (container->currentAppBuffer()) App(this);
+  return new App(this);
 }
 
 void App::Snapshot::reset() {
