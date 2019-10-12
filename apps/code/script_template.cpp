@@ -54,14 +54,14 @@ def roots(a,b,c):
     return None)");
 
 constexpr ScriptTemplate pongScriptTemplate("pong.py", "\x01" R"(from math import *
-  # Pong for NumWorks by boricj
+# Pong for NumWorks by boricj
 
-  from time import *
-  from kandinsky import *
-  from random import *
+from time import *
+from kandinsky import *
+from random import *
 
 
-  def pong():
+def pong():
 
 
   WIDTH = 320
@@ -161,7 +161,7 @@ constexpr ScriptTemplate pongScriptTemplate("pong.py", "\x01" R"(from math impor
       fill_rect(int(P2.x), int(P2.y), P2.width, P2.height, color(255, 0, 0))
       fill_rect(int(B.x), int(B.y), B.width, B.width, color(255, 255, 255))
       draw_string(str(score1), int(WIDTH / 4), 16)
-      draw_string(str(score2), int(3 * WIDTH / 4), 16)");
+      draw_string(str(score2), int(3 * WIDTH / 4), 16))");
 
 const ScriptTemplate * ScriptTemplate::Empty() {
         return &emptyScriptTemplate;
