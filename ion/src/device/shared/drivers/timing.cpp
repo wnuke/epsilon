@@ -17,11 +17,16 @@ using namespace Device::Timing;
 void msleep(uint32_t ms) {
   // We decrease the AHB clock frequency to save power while sleeping.
   Device::Board::setClockFrequency(Device::Board::Frequency::Low);
+  // Change the systick frequency to compensate the KCLK frequency change
+  Device::Timing::changeSysTickFrequency(Ion::Device::Clocks::Config::HCLKLowFrequency);
   for (volatile uint32_t i=0; i<Config::LoopsPerMillisecond*ms; i++) {
-      __asm volatile("nop");
+    __asm volatile("nop");
   }
+  // Change back the systick frequency
+  Device::Timing::changeSysTickFrequency(Ion::Device::Clocks::Config::HCLKFrequency);
   Device::Board::setClockFrequency(Device::Board::standardFrequency());
 }
+
 void usleep(uint32_t us) {
   for (volatile uint32_t i=0; i<Config::LoopsPerMicrosecond*us; i++) {
     __asm volatile("nop");
@@ -44,20 +49,29 @@ using namespace Regs;
 volatile uint64_t MillisElapsed = 0;
 
 void init() {
-  /* Systick clock source is the CPU clock HCLK divided by 8. To get 1 ms
-   * systick overflow, we need to set it to :
-   * (HCLK (MHz) * 1 000 000 / 8 )/ 1000 (ms/s) = HCLK (MHz) * 1000 / 8. */
-  constexpr int SysTickPerMillisecond = Ion::Device::Clocks::Config::HCLKFrequency * 1000 / 8;
-  CORTEX.SYST_RVR()->setRELOAD(SysTickPerMillisecond - 1); // Remove 1 because the counter resets *after* counting to 0
-  CORTEX.SYST_CVR()->setCURRENT(0);
-  CORTEX.SYST_CSR()->setCLKSOURCE(CORTEX::SYST_CSR::CLKSOURCE::AHB_DIV8);
-  CORTEX.SYST_CSR()->setTICKINT(true);
-  CORTEX.SYST_CSR()->setENABLE(true);
+  privateSetSysTickFrequency(Ion::Device::Clocks::Config::HCLKFrequency);
+}
+
+void changeSysTickFrequency(int frequencyInMHz) {
+  Ion::Device::Timing::shutdown();
+  privateSetSysTickFrequency(frequencyInMHz);
 }
 
 void shutdown() {
   CORTEX.SYST_CSR()->setENABLE(false);
   CORTEX.SYST_CSR()->setTICKINT(false);
+}
+
+void privateSetSysTickFrequency(int frequencyInMHz) {
+  /* Systick clock source is the CPU clock HCLK divided by 8. To get 1 ms
+   * systick overflow, we need to set it to :
+   * (HCLK (MHz) * 1 000 000 / 8 )/ 1000 (ms/s) = HCLK (MHz) * 1000 / 8. */
+  int SysTickPerMillisecond = frequencyInMHz * 1000 / 8;
+  CORTEX.SYST_RVR()->setRELOAD(SysTickPerMillisecond - 1); // Remove 1 because the counter resets *after* counting to 0
+  CORTEX.SYST_CVR()->setCURRENT(0); // setCURRENT will set the value to 0, no matter the argument, as per the CORTEX user guide
+  CORTEX.SYST_CSR()->setCLKSOURCE(CORTEX::SYST_CSR::CLKSOURCE::AHB_DIV8);
+  CORTEX.SYST_CSR()->setTICKINT(true);
+  CORTEX.SYST_CSR()->setENABLE(true);
 }
 
 }

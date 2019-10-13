@@ -24,11 +24,18 @@ bool micropython_port_vm_hook_loop() {
 
 bool micropython_port_interruptible_msleep(uint32_t delay) {
   uint32_t start = Ion::Timing::millis();
-  while (Ion::Timing::millis() - start < delay) {
-    if (micropython_port_interrupt_if_needed()) {
+  uint32_t timeSpent = 0;
+  while (timeSpent < delay) {
+    /* SysTick drifts at each frequency change, so we try not to change the
+     * frequency to often -> we look for interruptions every 100 ms. */
+    constexpr uint32_t millisPerSleep = 100;
+    bool lastLoop = millisPerSleep > delay - timeSpent;
+    Ion::Timing::msleep(lastLoop ? delay - timeSpent : millisPerSleep);
+    if (!lastLoop && micropython_port_interrupt_if_needed()) {
       return true;
     }
-    Ion::Timing::msleep(1);
+    uint64_t currentMillis = Ion::Timing::millis();
+    timeSpent = currentMillis > start ? currentMillis - start : UINT64_MAX - start + currentMillis;
   }
   return false;
 }
