@@ -53,21 +53,20 @@ def roots(a,b,c):
   else:
     return None)");
 
-
 const ScriptTemplate * ScriptTemplate::Empty() {
-        return &emptyScriptTemplate;
+  return &emptyScriptTemplate;
 }
 
 const ScriptTemplate * ScriptTemplate::Squares() {
-        return &squaresScriptTemplate;
+  return &squaresScriptTemplate;
 }
 
 const ScriptTemplate * ScriptTemplate::Mandelbrot() {
-        return &mandelbrotScriptTemplate;
+  return &mandelbrotScriptTemplate;
 }
 
 const ScriptTemplate * ScriptTemplate::Polynomial() {
-        return &polynomialScriptTemplate;
+  return &polynomialScriptTemplate;
 }
 
 }
