@@ -18,12 +18,12 @@ void msleep(uint32_t ms) {
   // We decrease the AHB clock frequency to save power while sleeping.
   Device::Board::setClockFrequency(Device::Board::Frequency::Low);
   // Change the systick frequency to compensate the KCLK frequency change
-  Device::Timing::changeSysTickFrequency(Ion::Device::Clocks::Config::HCLKLowFrequency);
+  Device::Timing::setSysTickFrequency(Ion::Device::Clocks::Config::HCLKLowFrequency);
   for (volatile uint32_t i=0; i<Config::LoopsPerMillisecond*ms; i++) {
     __asm volatile("nop");
   }
   // Change back the systick frequency
-  Device::Timing::changeSysTickFrequency(Ion::Device::Clocks::Config::HCLKFrequency);
+  Device::Timing::setSysTickFrequency(Ion::Device::Clocks::Config::HCLKFrequency);
   Device::Board::setClockFrequency(Device::Board::standardFrequency());
 }
 
