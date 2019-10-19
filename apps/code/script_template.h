@@ -10,7 +10,6 @@ public:
   static const ScriptTemplate * Squares();
   static const ScriptTemplate * Mandelbrot();
   static const ScriptTemplate * Polynomial();
-  static const ScriptTemplate * Pong();
   const char * name() const { return m_name; }
   const char * content() const { return m_value+1; }
   const char * value() const { return m_value; }

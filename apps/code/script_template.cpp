@@ -53,115 +53,6 @@ def roots(a,b,c):
   else:
     return None)");
 
-constexpr ScriptTemplate pongScriptTemplate("pong.py", "\x01" R"(from math import *
-# Pong for NumWorks by boricj
-
-from time import *
-from kandinsky import *
-from random import *
-
-
-def pong():
-
-
-  WIDTH = 320
-  HEIGHT = 224
-
-
-  class Paddle:
-      def __init__(self, x):
-          self.width = 16
-          self.height = 64
-          self.x = x
-          self.y = ((224 - self.height) / 2)
-
-      def move(self, dy):
-          self.y = min(max(self.y + dy, 0), HEIGHT - self.height)
-
-
-  class Ball:
-      def __init__(self):
-          self.width = 16
-
-      def reset(self):
-          self.x = (WIDTH - self.width) / 2
-          self.y = (HEIGHT - self.width) / 2
-          self.dx = (random() + 3) * 16
-          self.dy = (random() + 3) * 16
-
-      def collide(self, pad):
-          bx1 = self.x
-          by1 = self.y
-          bx2 = self.x + self.width
-          by2 = self.y + self.width
-          px1 = pad.x
-          py1 = pad.y
-          px2 = pad.x + pad.width
-          py2 = pad.y + pad.height
-          if bx1 < px2 and bx2 > px1 and by1 < py2 and by2 > py1:
-              return True
-          return False
-
-
-  B = Ball()
-  B.reset()
-  P1 = Paddle(16)
-  P2 = Paddle(WIDTH - 32)
-  score1 = 0
-  score2 = 0
-  fill_rect(0, 0, WIDTH, HEIGHT, color(0, 0, 0))
-
-  prevTime = monotonic()
-  while True:
-      curTime = monotonic()
-      dTime = curTime - prevTime
-      prevTime = curTime
-      keys = get_keys()
-      oldp1x = P1.x
-      oldp1y = P1.y
-      oldp2x = P2.x
-      oldp2y = P2.y
-      oldbx = B.x
-      oldby = B.y
-      B.x += B.dx * dTime
-      B.y += B.dy * dTime
-      if "up" in keys:
-          P1.move(-128 * dTime)
-      elif "down" in keys:
-          P1.move(128 * dTime)
-      if P2.y + P2.height / 2 > B.y + B.width / 2:
-          P2.move(-160 * dTime)
-      else:
-          P2.move(160 * dTime)
-      if B.collide(P1):
-          B.x = P1.x + P1.width + 1
-          B.dx *= -1.1
-          B.dy *= 1.1
-      elif B.collide(P2):
-          B.x = P2.x - B.width - 1
-          B.dx *= -1.1
-          B.dy *= 1.1
-      if B.x < 0:
-          B.reset()
-          score2 += 1
-      elif B.x > WIDTH:
-          B.reset()
-          score1 += 1
-      if B.y < 0:
-          B.y = 1
-          B.dy = -B.dy
-      elif B.y > HEIGHT - B.width:
-          B.y = HEIGHT - B.width - 1
-          B.dy = -B.dy
-      wait_vblank()
-      fill_rect(int(oldp1x), int(oldp1y), P1.width, P1.height, color(0, 0, 0))
-      fill_rect(int(oldp2x), int(oldp2y), P2.width, P2.height, color(0, 0, 0))
-      fill_rect(int(oldbx), int(oldby), B.width, B.width, color(0, 0, 0))
-      fill_rect(int(P1.x), int(P1.y), P1.width, P1.height, color(0, 0, 255))
-      fill_rect(int(P2.x), int(P2.y), P2.width, P2.height, color(255, 0, 0))
-      fill_rect(int(B.x), int(B.y), B.width, B.width, color(255, 255, 255))
-      draw_string(str(score1), int(WIDTH / 4), 16)
-      draw_string(str(score2), int(3 * WIDTH / 4), 16))");
 
 const ScriptTemplate * ScriptTemplate::Empty() {
         return &emptyScriptTemplate;
@@ -177,10 +68,6 @@ const ScriptTemplate * ScriptTemplate::Mandelbrot() {
 
 const ScriptTemplate * ScriptTemplate::Polynomial() {
         return &polynomialScriptTemplate;
-}
-
-const ScriptTemplate * ScriptTemplate::Pong() {
-        return &pongScriptTemplate;
 }
 
 }
