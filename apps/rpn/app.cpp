@@ -4,6 +4,8 @@
 #include "apps/i18n.h"
 #include <assert.h>
 
+extern const ToolboxMessageTree *toolboxModel;
+
 namespace Rpn {
 
 I18n::Message App::Descriptor::name() {
@@ -23,8 +25,7 @@ App::Snapshot::Snapshot()
 }
 
 App * App::Snapshot::unpack(Container * container) {
-  App * app = new App(container, this);
-  return app;
+  return new (container) App(this);
 }
 
 App::Descriptor * App::Snapshot::descriptor() {
@@ -32,21 +33,28 @@ App::Descriptor * App::Snapshot::descriptor() {
   return &descriptor;
 }
 
-RpnStack * App::Snapshot::rpnStack() {
-  return &m_rpnStack;
+Stack * App::Snapshot::stack() {
+  return &m_stack;
 }
 
 void App::Snapshot::tidy() {
 }
 
 void App::Snapshot::reset() {
-  m_rpnStack.clear();
+  m_stack(Stack::CLEAR);
 }
 
-App::App(Container * container, Snapshot * snapshot) :
-  Shared::TextFieldDelegateApp(snapshot, &m_rpnPromptController),
-  m_rpnPromptController(this, snapshot->rpnStack())
+App::App(Snapshot * snapshot) :
+  Shared::TextFieldDelegateApp(snapshot, &m_inputController),
+  m_stackController(this, snapshot->stack(), &m_inputController, &m_view, localContext()),
+  m_inputController(this, snapshot->stack(), &m_stackController, &m_view),
+  m_view(this, &m_inputController, &m_stackController),
+  m_toolbox(AppsContainer::sharedAppsContainer()->mathToolbox()->rootModel(), &m_inputController, &m_stackController)
 {
+}
+
+::Toolbox * App::toolboxForInputEventHandler(InputEventHandler * textInput) {
+  return &m_toolbox;
 }
 
 }

@@ -3,9 +3,11 @@ app_headers += apps/rpn/app.h
 
 app_src += $(addprefix apps/rpn/,\
   app.cpp\
-  rpn_prompt_controller.cpp\
+  rpn_content_view.cpp\
+  rpn_input_controller.cpp\
   rpn_stack_controller.cpp\
   rpn_stack.cpp\
+  rpn_toolbox.cpp\
 )
 
 i18n_files += $(addprefix apps/rpn/,\

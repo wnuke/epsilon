@@ -1,7 +1,7 @@
-
-#include "rpn_stack_controller.h"
 #include "app.h"
-#include "rpn_prompt_controller.h"
+#include "rpn_content_view.h"
+#include "rpn_stack_controller.h"
+#include "rpn_input_controller.h"
 #include "../shared/poincare_helpers.h"
 #include <assert.h>
 #include <poincare_nodes.h>
@@ -10,79 +10,64 @@ using namespace Poincare;
 
 namespace Rpn {
 
-RpnStackController::RpnStackController(Responder * parentResponder, RpnStack * rpnStack, SelectableTableView * view, RpnPromptController * promptController) :
+StackController::StackController(Responder * parentResponder, Stack * Stack, InputController * inputController, ContentView * view, Poincare::Context *context) :
   ViewController(parentResponder),
-  m_rpnStack(rpnStack),
+  m_stack(Stack),
+  m_inputController(inputController),
   m_view(view),
-  m_promptController(promptController)
+  m_context(context)
 {
 }
 
-View * RpnStackController::view() {
+View * StackController::view() {
   return m_view;
 }
 
-void RpnStackController::didBecomeFirstResponder() {
+void StackController::didBecomeFirstResponder() {
   reloadAndScroll();
-  m_view->selectCellAtLocation(0, m_rpnStack->length() - 1);
+  stackView()->selectCellAtLocation(0, m_stack->length() - 1);
 }
 
-bool RpnStackController::handleEvent(Ion::Events::Event event) {
-  int stackRow = m_rpnStack->length() - selectedRow() - 1;
-  if (event == Ion::Events::Down) {
-    m_view->deselectTable();
-    Container::activeApp()->setFirstResponder(m_promptController);
-    return true;
+bool StackController::handleEvent(Ion::Events::Event event) {
+  size_t stackRow = m_stack->length() - selectedRow() - 1;
+  bool handled = true;
+
+  if (event == Ion::Events::Down || event == Ion::Events::Back) {
+    stackView()->deselectTable();
+    Container::activeApp()->setFirstResponder(m_inputController);
   }
-  else if (event == Ion::Events::EXE || event == Ion::Events::OK) {
-    m_view->deselectTable();
-    m_promptController->setText((*m_rpnStack)[stackRow]);
-    Container::activeApp()->setFirstResponder(m_promptController);
-    return true;
+  else if (event == Ion::Events::OK || event == Ion::Events::EXE) {
+    m_inputController->setText((*m_stack)[stackRow]);
+    Container::activeApp()->setFirstResponder(m_inputController);
+    reloadAndScroll();
+    stackView()->deselectTable();
+  }
+  else if (event == Ion::Events::Backspace) {
+    m_stack->dropNth(stackRow);
+    stackView()->reloadData(false);
+    if (stackRow == 0) {
+      stackView()->deselectTable();
+      stackView()->selectCellAtLocation(0, m_stack->length() - 1);
+    }
   }
   else if (event == Ion::Events::Clear) {
-    while (m_rpnStack->length() > selectedRow()+1) {
-      pop();
+    while (m_stack->length() > stackRow+1) {
+      (*m_stack)(Stack::POP);
     }
-    return true;
+    reloadAndScroll();
   }
-  else if (event == Ion::Events::Backspace/* || event == Ion::Events::Cut*/) {
-    char backup[stackRow+1][RpnStack::k_expressionSize];
-    for (int i = 0; i < stackRow+1; i++) {
-      strlcpy(backup[i], (*m_rpnStack)[0], RpnStack::k_expressionSize);
-      pop();
-    }
-    #if 0
-    // FIXME: escher's SelectableTableView grab Ion::Events::Cut
-    if (event == Ion::Events::Cut) {
-      Clipboard::sharedClipboard()->store(backup[stackRow]);
-    }
-    #endif
-    for (int i = stackRow - 1; i >= 0; i--) {
-      push(backup[i], *((Rpn::App*) Container::activeApp())->localContext());
-    }
-    if (empty()) {
-      Container::activeApp()->setFirstResponder(m_promptController);
-    }
-    else {
-      reloadAndScroll();
-      stackRow = m_rpnStack->length() - stackRow - 1;
-      if (stackRow < 0) {
-        stackRow = 0;
-      }
-      m_view->selectCellAtLocation(0, stackRow);
-    }
-    return true;
+  else {
+    handled = false;
   }
 
-  return false;
+  return handled;
 }
 
-KDCoordinate RpnStackController::rowHeight(int i) {
-  return m_rpnStack->height(m_rpnStack->length() - i - 1) + k_padding * 2;
+KDCoordinate StackController::rowHeight(int i) {
+  return m_stack->height(m_stack->length() - i - 1) + k_padding * 2;
 }
 
-void RpnStackController::willDisplayCellForIndex(HighlightCell * cell, int index) {
+void StackController::willDisplayCellForIndex(HighlightCell * cell, int index) {
   EvenOddExpressionCell *realCell = static_cast<EvenOddExpressionCell *>(cell);
   realCell->setEven(index%2);
   realCell->setAlignment(1, 0.5);
@@ -91,84 +76,62 @@ void RpnStackController::willDisplayCellForIndex(HighlightCell * cell, int index
   realCell->reloadCell();
 }
 
-Poincare::Layout RpnStackController::createLayout(int index) {
-  Expression e = m_rpnStack->expression(m_rpnStack->length() - index - 1);
+Poincare::Layout StackController::createLayout(int index) {
+  Expression e = Expression::Parse((*m_stack)[m_stack->length() - index - 1]);
   return e.createLayout(Preferences::sharedPreferences()->displayMode(), Preferences::sharedPreferences()->numberOfSignificantDigits());
 }
 
-void RpnStackController::dup() {
-  if (!isFull()) {
-    m_rpnStack->dup();
+void StackController::reloadAndScroll(int index) {
+  if (index < 0 || index >= static_cast<int>(m_stack->length())) {
+    index = m_stack->length()-1;
+  }
+  stackView()->reloadData(false);
+  stackView()->scrollToCell(0, m_stack->length()-1);
+}
+
+SelectableTableView* StackController::stackView() {
+  return m_view->stackView();
+}
+
+
+I18n::Message StackController::operator()(const char* text) {
+  auto r = (*m_stack)(text, m_context);
+  if (r != I18n::Message::Default) {
     reloadAndScroll();
   }
+  return r;
 }
 
-void RpnStackController::swap() {
-  m_rpnStack->swap();
-  reloadAndScroll();
-}
-
-void RpnStackController::rot() {
-  m_rpnStack->rot();
-  reloadAndScroll();
-}
-
-void RpnStackController::over() {
-  if (!isFull()) {
-    m_rpnStack->over();
+I18n::Message StackController::operator()(Stack::StackOperation op) {
+  auto r = (*m_stack)(op);
+  if (r == I18n::Message::Default) {
     reloadAndScroll();
   }
+  return r;
 }
 
-bool RpnStackController::push(const char *text, Poincare::Context &context) {
-  if (isFull()) {
-    return false;
+I18n::Message StackController::operator()(Stack::SpecialOperation op) {
+  auto r = (*m_stack)(op, m_context);
+  if (r == I18n::Message::Default) {
+    reloadAndScroll();
   }
-  if (!m_rpnStack->push(text, context)) {
-    Container::activeApp()->displayWarning(I18n::Message::SyntaxError);
-    return false;
-  }
-  reloadAndScroll();
-  return true;
+  return r;
 }
 
-void RpnStackController::push(Poincare::Expression &exp, Poincare::Context &context) {
-  m_rpnStack->push(exp, context);
-  m_view->deselectTable();
-  reloadAndScroll();
+I18n::Message StackController::operator()(Poincare::ExpressionNode::Type op) {
+  auto r = (*m_stack)(op, m_context);
+  if (r == I18n::Message::Default) {
+    reloadAndScroll();
+  }
+  return r;
 }
 
-void RpnStackController::pop() {
-  m_rpnStack->pop();
-  for (int i = 0; i < RpnStack::k_stackSize; i++) {
-    m_cells[i].setHighlighted(false);
+I18n::Message StackController::operator()(I18n::Message op) {
+  auto r = (*m_stack)(op, m_context);
+  if (r == I18n::Message::Default) {
+    reloadAndScroll();
   }
-  reloadAndScroll();
-}
-
-void RpnStackController::clear() {
-  m_rpnStack->clear();
-  for (int i = 0; i < RpnStack::k_stackSize; i++) {
-    m_cells[i].setHighlighted(false);
-  }
-  m_view->deselectTable();
-  reloadAndScroll();
-}
-
-bool RpnStackController::isFull() {
-  if (m_rpnStack->full()) {
-    Container::activeApp()->displayWarning(I18n::Message::StorageMemoryFull1, I18n::Message::StorageMemoryFull2, true);
-    return true;
-  }
-  return false;
-}
-
-void RpnStackController::reloadAndScroll(int index) {
-  if (index < 0 || index >= m_rpnStack->length()) {
-    index = m_rpnStack->length()-1;
-  }
-  m_view->reloadData(false);
-  m_view->scrollToCell(0, m_rpnStack->length()-1);
+  return r;
 }
 
 }
