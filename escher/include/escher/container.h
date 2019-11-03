@@ -27,6 +27,7 @@ public:
   Container(Container&& other) = delete;
   Container& operator=(const Container& other) = delete;
   Container& operator=(Container&& other) = delete;
+  virtual void * currentAppBuffer() = 0;
   virtual void run();
   virtual bool dispatchEvent(Ion::Events::Event event) override;
   virtual bool switchTo(App::Snapshot * snapshot);

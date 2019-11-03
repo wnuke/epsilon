@@ -16,7 +16,7 @@ I18n::Message App::Descriptor::upperName() {
 }
 
 App * App::Snapshot::unpack(Container * container) {
-  return new App(this);
+  return new (container->currentAppBuffer()) App(this);
 }
 
 App::Descriptor * App::Snapshot::descriptor() {

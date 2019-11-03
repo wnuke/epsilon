@@ -22,7 +22,7 @@ const Image * App::Descriptor::icon() {
 }
 
 App * App::Snapshot::unpack(Container * container) {
-  return new App(this);
+  return new (container->currentAppBuffer()) App(this);
 }
 
 void App::Snapshot::reset() {
