@@ -25,8 +25,6 @@
 
 /* TODO: make this a generic ROM loading routine */
 
-#include <stdio.h>
-#include <string.h>
 #include <noftypes.h>
 #include <nes_rom.h>
 #include <intro.h>
@@ -34,6 +32,8 @@
 #include <nes_ppu.h>
 #include <nes.h>
 #include <gui.h>
+#include <stdio.h>
+#include <string.h>
 #include <log.h>
 #include <osd.h>
 

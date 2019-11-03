@@ -25,7 +25,7 @@ App::Snapshot::Snapshot()
 }
 
 App * App::Snapshot::unpack(Container * container) {
-  return new (container) App(this);
+  return new (container->currentAppBuffer()) App(this);
 }
 
 App::Descriptor * App::Snapshot::descriptor() {
