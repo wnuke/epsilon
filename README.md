@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/numworks/epsilon/workflows/Continuous%20integration/badge.svg)](https://github.com/numworks/epsilon/actions?workflow=Continuous+integration)
 
-THis repo is for me to merge anything I find cool or usefull for the numworks calculator os, mainly deals with making sure conflicts there are no conflicts and that it is ready to build.
+This fork is for me to merge anything I find cool or useful for the numworks calculator os, mainly deals with making sure there are no conflicts and that it is ready to build quickly.
 
 ## Official Epsilon README from Numworks:
 
