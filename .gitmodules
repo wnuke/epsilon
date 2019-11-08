@@ -1,0 +1,10 @@
+[submodule "apps/rpn"]
+	path = apps/rpn
+	url = https://github.com/boricj/numworks-rpn.git
+[submodule "apps/nes"]
+	path = apps/nes
+	url = https://github.com/zardam/numworks-nofrendo.git
+	branch = v12-n110
+[submodule "apps/atom"]
+	path = apps/atom
+	url = https://github.com/M4xi1m3/nw-atom
