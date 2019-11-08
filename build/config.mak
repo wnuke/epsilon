@@ -5,6 +5,7 @@ DEBUG ?= 0
 
 EPSILON_VERSION ?= 12.0.0
 # Valid values are "none", "update", "beta"
+USERNAME ?= N/A
 EPSILON_APPS ?= calculation code graph rpn atom solver statistics sequence regression probability nes settings
 EPSILON_I18N ?= en fr es de pt
 EPSILON_GETOPT ?= 0

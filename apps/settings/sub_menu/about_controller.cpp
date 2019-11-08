@@ -22,7 +22,7 @@ bool AboutController::handleEvent(Ion::Events::Event event) {
     return true;
   }
   if (event == Ion::Events::OK || event == Ion::Events::EXE) {
-    if (selectedRow() == 0) {
+    if (selectedRow() == 1) {
       MessageTableCellWithBuffer * myCell = (MessageTableCellWithBuffer *)m_selectableTableView.selectedCell();
       if (strcmp(myCell->accessoryText(), Ion::patchLevel()) == 0) {
         myCell->setAccessoryText(Ion::softwareVersion());
@@ -51,11 +51,12 @@ void AboutController::willDisplayCellForIndex(HighlightCell * cell, int index) {
   GenericSubController::willDisplayCellForIndex(cell, index);
   MessageTableCellWithBuffer * myCell = (MessageTableCellWithBuffer *)cell;
   static const char * messages[] = {
+    Ion::username(),
     Ion::softwareVersion(),
     Ion::serialNumber(),
     Ion::fccId()
   };
-  assert(index >= 0 && index < 3);
+  assert(index >= 0 && index < 4);
   myCell->setAccessoryText(messages[index]);
 }
 
