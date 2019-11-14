@@ -6,6 +6,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
+      - run: git submodule init
+      - run: git submodule update
       - run: make -j2 PLATFORM=simulator TARGET=android
       - uses: actions/upload-artifact@master
         with:
@@ -16,6 +18,8 @@ jobs:
     steps:
       - run: sudo apt-get install binutils-arm-none-eabi build-essential gcc-arm-none-eabi imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
       - uses: actions/checkout@v1
+      - run: git submodule init
+      - run: git submodule update
       - run: make -j2 MODEL=n0100 epsilon.dfu
       - run: make -j2 MODEL=n0100 epsilon.onboarding.dfu
       - run: make -j2 MODEL=n0100 epsilon.onboarding.update.dfu
@@ -31,6 +35,8 @@ jobs:
     steps:
       - run: sudo apt-get install binutils-arm-none-eabi build-essential gcc-arm-none-eabi imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
       - uses: actions/checkout@v1
+      - run: git submodule init
+      - run: git submodule update
       - run: make -j2 epsilon.dfu
       - run: make -j2 epsilon.onboarding.dfu
       - run: make -j2 epsilon.onboarding.update.dfu
@@ -49,6 +55,8 @@ jobs:
       - uses: numworks/setup-msys2@v1
       - uses: actions/checkout@v1
       - run: msys2do pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-pkg-config make mingw-w64-x86_64-python3 mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng
+      - run: git submodule init
+      - run: git submodule update
       - run: msys2do make -j2 PLATFORM=simulator
       - uses: actions/upload-artifact@master
         with:
@@ -63,6 +71,8 @@ jobs:
         with:
           sdk: latest-fastcomp
       - uses: actions/checkout@v1
+      - run: git submodule init
+      - run: git submodule update
       - run: make -j2 PLATFORM=simulator TARGET=web
       - uses: actions/upload-artifact@master
         with:
@@ -75,6 +85,8 @@ jobs:
     steps:
       - run: sudo apt-get install build-essential imagemagick libfreetype6-dev libjpeg-dev libpng-dev pkg-config
       - uses: actions/checkout@v1
+      - run: git submodule init
+      - run: git submodule update
       - run: make -j2 PLATFORM=simulator
       - uses: actions/upload-artifact@master
         with:
@@ -87,6 +99,8 @@ jobs:
     steps:
       - run: brew install numworks/tap/epsilon-sdk
       - uses: actions/checkout@v1
+      - run: git submodule init
+      - run: git submodule update
       - run: make -j2 PLATFORM=simulator
       - uses: actions/upload-artifact@master
         with:
@@ -99,6 +113,8 @@ jobs:
     steps:
       - run: brew install numworks/tap/epsilon-sdk
       - uses: actions/checkout@v1
+      - run: git submodule init
+      - run: git submodule update
       - run: make -j2 PLATFORM=simulator TARGET=ios GOOGLE_ANALYTICS=0
       - uses: actions/upload-artifact@master
         with:
