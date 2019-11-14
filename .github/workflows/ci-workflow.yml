@@ -54,7 +54,7 @@ jobs:
     steps:
       - uses: numworks/setup-msys2@v1
       - uses: actions/checkout@v1
-      - run: msys2do pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-pkg-config make mingw-w64-x86_64-python3 mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng
+      - run: msys2do pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-freetype mingw-w64-x86_64-pkg-config make mingw-w64-x86_64-python3 mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-libpng xxd
       - run: git submodule init
       - run: git submodule update
       - run: msys2do make -j2 PLATFORM=simulator
