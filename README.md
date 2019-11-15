@@ -2,10 +2,6 @@
 
 [![Build Status](https://github.com/numworks/epsilon/workflows/Continuous%20integration/badge.svg)](https://github.com/numworks/epsilon/actions?workflow=Continuous+integration)
 
-This fork is for me to merge anything I find cool or useful for the numworks calculator os, mainly deals with making sure there are no conflicts and that it is ready to build quickly.
-
-## Official Epsilon README from Numworks:
-
 Epsilon is a high-performance graphing calculator operating system. It includes eight apps that cover the high school mathematics curriculum.
 
 You can try Epsilon straight from your browser in the [online simulator](https://www.numworks.com/simulator/).
