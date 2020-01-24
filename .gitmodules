@@ -1,0 +1,3 @@
+[submodule "apps/atom"]
+	path = apps/atom
+	url = https://github.com/M4xi1m3/nw-atom.git
