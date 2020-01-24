@@ -6,6 +6,7 @@
 #include <ion/console.h>
 #include <ion/display.h>
 #include <ion/events.h>
+#include <ion/exam_mode.h>
 #include <ion/keyboard.h>
 #include <ion/led.h>
 #include <ion/power.h>
@@ -27,7 +28,6 @@ void ion_main(int argc, const char * const argv[]);
 
 namespace Ion {
 
-const char * username();
 const char * serialNumber();
 const char * softwareVersion();
 const char * patchLevel();

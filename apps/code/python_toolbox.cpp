@@ -100,9 +100,7 @@ const ToolboxMessageTree KandinskyModuleChildren[] = {
   ToolboxMessageTree::Leaf(I18n::Message::PythonCommandSetPixel, I18n::Message::PythonSetPixel),
   ToolboxMessageTree::Leaf(I18n::Message::PythonCommandColor, I18n::Message::PythonColor),
   ToolboxMessageTree::Leaf(I18n::Message::PythonCommandDrawString, I18n::Message::PythonDrawString),
-  ToolboxMessageTree::Leaf(I18n::Message::PythonCommandFillRect, I18n::Message::PythonFillRect),
-  ToolboxMessageTree::Leaf(I18n::Message::PythonCommandGetKeys, I18n::Message::PythonGetKeys),
-  ToolboxMessageTree::Leaf(I18n::Message::PythonCommandWaitVBlank, I18n::Message::PythonWaitVBlank)
+  ToolboxMessageTree::Leaf(I18n::Message::PythonCommandFillRect, I18n::Message::PythonFillRect)
 };
 
 const ToolboxMessageTree RandomModuleChildren[] = {
@@ -169,21 +167,12 @@ const ToolboxMessageTree TurtleModuleChildren[] = {
   ToolboxMessageTree::Leaf(I18n::Message::PythonTurtleCommandGrey, I18n::Message::PythonTurtleGrey, false)
 };
 
-const ToolboxMessageTree timeModuleChildren[] = {
-  ToolboxMessageTree::Leaf(I18n::Message::PythonTimeCommandImportFrom, I18n::Message::PythonTimeFromImport, false),
-  ToolboxMessageTree::Leaf(I18n::Message::PythonCommandImportTime, I18n::Message::PythonTimeImport, false),
-  ToolboxMessageTree::Leaf(I18n::Message::PythonCommandTimeFunction, I18n::Message::PythonTimePrefix, false),
-  ToolboxMessageTree::Leaf(I18n::Message::PythonTimeCommandSleepDemo, I18n::Message::PythonTimeSleep, false, I18n::Message::PythonTimeCommandSleep),
-  ToolboxMessageTree::Leaf(I18n::Message::PythonTimeCommandMonotonic, I18n::Message::PythonTimeMonotonic, false)
-};
-
 const ToolboxMessageTree modulesChildren[] = {
   ToolboxMessageTree::Node(I18n::Message::MathModule, MathModuleChildren),
   ToolboxMessageTree::Node(I18n::Message::CmathModule, CMathModuleChildren),
   ToolboxMessageTree::Node(I18n::Message::RandomModule, RandomModuleChildren),
   ToolboxMessageTree::Node(I18n::Message::TurtleModule, TurtleModuleChildren),
-  ToolboxMessageTree::Node(I18n::Message::KandinskyModule, KandinskyModuleChildren),
-  ToolboxMessageTree::Node(I18n::Message::PythonTimeModule, timeModuleChildren)
+  ToolboxMessageTree::Node(I18n::Message::KandinskyModule, KandinskyModuleChildren)
 };
 
 const ToolboxMessageTree catalogChildren[] = {

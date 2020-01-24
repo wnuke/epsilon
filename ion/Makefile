@@ -22,7 +22,7 @@ ion_console_display_src += ion/src/shared/console_display.cpp
 # char test[4]= "ab"; is valid and should initialize test to 'a','b',0,0).
 # Older versions of GCC are not conformant so we resort to an initializer list.
 initializer_list = $(shell echo $(1) | sed  "s/\(.\)/'\1',/g")0
-$(call object_for,ion/src/shared/platform_info.cpp): SFLAGS += -DPATCH_LEVEL="$(call initializer_list,$(PATCH_LEVEL))" -DEPSILON_VERSION="$(call initializer_list,$(EPSILON_VERSION))" -DUSERNAME="$(call initializer_list,$(USERNAME))"
+$(call object_for,ion/src/shared/platform_info.cpp): SFLAGS += -DPATCH_LEVEL="$(call initializer_list,$(PATCH_LEVEL))" -DEPSILON_VERSION="$(call initializer_list,$(EPSILON_VERSION))"
 
 ion_src += $(addprefix ion/src/shared/, \
   console_line.cpp \
@@ -56,6 +56,7 @@ ion_all_src += $(ion_simulator_sdl_src) $(ion_simulator_headless_src)
 ion_all_src += $(ion_device_dfu_relocated_src) $(ion_device_dfu_xip_src)
 ion_all_src += $(ion_console_display_src) $(ion_console_stdio_src) $(ion_console_uart_src)
 
-ion_default_src = $(ion_src) $(ion_simulator_sdl_src) $(ion_device_dfu_relocated_src) $(ion_console_display_src)
+ion_default_src = $(ion_src) $(ion_simulator_sdl_src) $(ion_device_dfu_relocated_src) $(ion_console_stdio_src)
+ion_console_on_screen_src = $(ion_src) $(ion_simulator_sdl_src) $(ion_device_dfu_relocated_src) $(ion_console_display_src)
 ion_xip_src = $(ion_src) $(ion_simulator_sdl_src) $(ion_device_dfu_xip_src) $(ion_console_uart_src)
 ion_headless_src = $(ion_src) $(ion_simulator_headless_src) $(ion_device_dfu_relocated_src) $(ion_console_stdio_src)
