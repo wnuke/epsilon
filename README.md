@@ -1,5 +1,7 @@
 <img src="docs/epsilon.svg?sanitize=true" alt="NumWorks Epsilon logo" height="70" >
 
+![Continuous integration](https://github.com/wnuke/epsilon/workflows/Continuous%20integration/badge.svg?branch=master)
+
 Epsilon is a high-performance graphing calculator operating system. It includes eight apps that cover the high school mathematics curriculum.
 
 You can try Epsilon straight from your browser in the [online simulator](https://www.numworks.com/simulator/).
